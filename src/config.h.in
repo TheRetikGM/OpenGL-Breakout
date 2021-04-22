@@ -1,0 +1,11 @@
+#pragma once
+#ifndef _INSTALL
+#cmakedefine ROOT_DIR "@PROJECT_DIR@"
+#cmakedefine SRC_DIR "@SRC_DIR@"
+#cmakedefine BINARY_DIR "@BINARY_DIR@"
+#cmakedefine ASSETS_DIR "@ASSETS_DIR@"
+#else
+#define ROOT_DIR ".."
+#define SRC_DIR "../src"
+#define BINARY_DIR "."
+#endif
