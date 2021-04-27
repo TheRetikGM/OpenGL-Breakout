@@ -1,4 +1,7 @@
 #include <iostream>
+#include <Game.h>
+#include <Shader.h>
+#include <Texture.h>
 
 int main(int argc, char* argv[])
 {

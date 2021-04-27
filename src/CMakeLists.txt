@@ -10,6 +10,10 @@ include_directories(
 	"${SRC_INCLUDE}"
 )
 
+add_subdirectory("Game")
+add_subdirectory("Shader")
+add_subdirectory("Texture")
+
 configure_file(config.h.in config.h @ONLY)
 
 file(GLOB SHADERS

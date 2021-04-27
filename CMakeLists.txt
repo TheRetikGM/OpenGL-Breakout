@@ -8,7 +8,11 @@ add_subdirectory("src")
 target_include_directories("${PROJECT_NAME}"
 	PRIVATE "${CMAKE_SOURCE_DIR}/include"
 )	
-#target_link_libraries("${PROJECT_NAME}" )
+target_link_libraries("${PROJECT_NAME}" 
+	Game
+	Shader
+	Texture
+)
 target_link_directories("${PROJECT_NAME}"
 	PRIVATE "${CMAKE_SOURCE_DIR}/lib"
 )
