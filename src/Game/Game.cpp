@@ -1,4 +1,4 @@
-#include <Game.h>
+#include "Game.h"
 
 Game::Game (uint width, uint height) : Width(width), Height(height), State(GAME_ACTIVE)
 {

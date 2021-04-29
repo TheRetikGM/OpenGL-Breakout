@@ -1,5 +1,5 @@
 #pragma once
-typedef unsigned int uint;
+#include "CustomTypes.h"
 
 enum GameState {
     GAME_ACTIVE,

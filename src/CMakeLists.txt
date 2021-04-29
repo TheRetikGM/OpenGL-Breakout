@@ -6,7 +6,7 @@ set(ASSETS_DIR "${ROOT_DIR}/assets")
 
 include_directories(
 	"${BINARY_DIR}"
-	"${REPO_ROOT}/include"
+	"${ROOT_DIR}/include"
 	"${SRC_INCLUDE}"
 )
 
@@ -24,10 +24,13 @@ file(GLOB SHADERS
 
 add_executable("${PROJECT_NAME}"
 	main.cpp
+	ResourceManager.cpp
+	include/ResourceManager.h
 	glad.c
 	stb_image.cpp
 	stb_image_write.cpp
 	include/DebugColors.h
+	include/CustomTypes.h
 	"${BINARY_DIR}/config.h"
 	"${SHADERS}"
 )
