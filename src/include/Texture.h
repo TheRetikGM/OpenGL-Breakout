@@ -1,21 +1,19 @@
 #pragma once
-#include <glad/glad.h>
-#include "CustomTypes.h"
 
 class Texture2D
 {
 public:
-	uint ID;
-	uint Width, Height;
-	uint Internal_format;
-	uint Image_format;
+	unsigned int ID;
+	unsigned int Width, Height;
+	unsigned int Internal_format;
+	unsigned int Image_format;
 
-	uint Wrap_S, Wrap_T;
-	uint Filter_min, Filter_mag;
+	unsigned int Wrap_S, Wrap_T;
+	unsigned int Filter_min, Filter_mag;
 
 	Texture2D();	
 
-	void Generate(uint width, uint height, unsigned char* data);
+	void Generate(unsigned int width, unsigned int height, unsigned char* data);
 
 	void Bind() const;
 };

@@ -3,10 +3,11 @@
 #include <sstream>
 #include <fstream>
 #include <stb_image.h>
+#include "config.h"
 
 std::map<std::string, Shader> ResourceManager::Shaders;
 std::map<std::string, Texture2D> ResourceManager::Textures;
-Shader ResourceManager::LoadShader(c_string vShaderFile, c_string fShaderFile, c_string gShaderFile, std::string name)
+Shader ResourceManager::LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name)
 {
 	Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
 	return Shaders[name];
@@ -15,7 +16,7 @@ Shader ResourceManager::GetShader(std::string name)
 {
 	return Shaders[name];
 }
-Texture2D ResourceManager::LoadTexture(c_string file, bool alpha, std::string name)
+Texture2D ResourceManager::LoadTexture(const char* file, bool alpha, std::string name)
 {
 	Textures[name] = loadTextureFromFile(file, alpha);
 	return Textures[name];
@@ -31,7 +32,7 @@ void ResourceManager::Clear()
 	for (auto& i : Textures)
 		glDeleteTextures(1, &i.second.ID);
 }
-Shader ResourceManager::loadShaderFromFile(c_string vShaderFile, c_string fShaderFile, c_string gShaderFile)
+Shader ResourceManager::loadShaderFromFile(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile)
 {
 	std::string vertexCode;
 	std::string fragmentCode;
@@ -65,15 +66,15 @@ Shader ResourceManager::loadShaderFromFile(c_string vShaderFile, c_string fShade
 		throw std::exception(("ERROR::LoadShader: Failed to read shader files\n" + std::string(e.what())).c_str());
 	}
 
-	c_string vShaderCode = vertexCode.c_str();
-	c_string fShaderCode = fragmentCode.c_str();
-	c_string gShaderCode = geometryCode.c_str();
+	const char* vShaderCode = vertexCode.c_str();
+	const char* fShaderCode = fragmentCode.c_str();
+	const char* gShaderCode = geometryCode.c_str();
 
 	Shader shader;
 	shader.Compile(vShaderCode, fShaderCode, gShaderFile != nullptr ? gShaderCode : nullptr);
 	return shader;
 }
-Texture2D ResourceManager::loadTextureFromFile(c_string file, bool alpha)
+Texture2D ResourceManager::loadTextureFromFile(const char* file, bool alpha)
 {
 	Texture2D texture;
 	if (alpha)

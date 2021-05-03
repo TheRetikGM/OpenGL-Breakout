@@ -1,6 +1,4 @@
 #pragma once
-#include "CustomTypes.h"
-
 enum GameState {
     GAME_ACTIVE,
     GAME_MENU,
@@ -11,9 +9,9 @@ class Game
     public:
         GameState State;
         bool      Keys[1024];
-        uint      Width, Height;
+        unsigned int      Width, Height;
 
-        Game (uint Width, uint Height);
+        Game (unsigned int Width, unsigned int Height);
         ~Game();
 
         void Init();

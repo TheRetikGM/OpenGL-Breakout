@@ -1,11 +1,17 @@
 #pragma once
+#ifndef __CONFIG_H__
+#define __CONFIG_H__
 #ifndef _INSTALL
 #cmakedefine ROOT_DIR "@PROJECT_DIR@"
 #cmakedefine SRC_DIR "@SRC_DIR@"
 #cmakedefine BINARY_DIR "@BINARY_DIR@"
 #cmakedefine ASSETS_DIR "@ASSETS_DIR@"
+#define SHADERS_DIR SRC_DIR "/shaders/"
+#define TEXTURES_DIR ASSETS_DIR "/Textures/"
 #else
 #define ROOT_DIR ".."
 #define SRC_DIR "../src"
 #define BINARY_DIR "."
+#endif
+#include <glad/glad.h>
 #endif

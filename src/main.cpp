@@ -2,20 +2,17 @@
 #include <exception>
 #include <string>
 #include "Game.h"
-#include "Shader.h"
-#include "Texture.h"
 #include "ResourceManager.h"
-#include "GLFW/glfw3.h"
-#include "CustomTypes.h"
-#include <glad/glad.h>
 #include "DebugColors.h"
+#include "config.h"
+#include <GLFW/glfw3.h>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
-uint SCREEN_WIDTH = 800;
-uint SCREEN_HEIGHT = 600;
+unsigned int SCREEN_WIDTH = 800;
+unsigned int SCREEN_HEIGHT = 600;
 
 Game Breakout(SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -23,6 +20,7 @@ int main(int argc, char* argv[])
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, false);
@@ -44,7 +42,7 @@ int main(int argc, char* argv[])
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Initialize game
-	Breakout.Init();
+	Breakout.Init();	
 
 	float deltaTime = 0.0f;
 	float lastFrame = 0.0f;
@@ -68,7 +66,6 @@ int main(int argc, char* argv[])
 
 	ResourceManager::Clear();
 	glfwTerminate();
-
 	return 0;
 }
 

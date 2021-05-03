@@ -8,7 +8,8 @@ add_subdirectory("src")
 target_link_libraries(${PROJECT_NAME}
 	Game
 	Shader
-	Texture	
+	Texture
+	GLAD
 )
 
 target_link_directories("${PROJECT_NAME}"

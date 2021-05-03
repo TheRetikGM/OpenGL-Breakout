@@ -13,6 +13,7 @@ include_directories(
 add_subdirectory("Game")
 add_subdirectory("Shader")
 add_subdirectory("Texture")
+add_library(GLAD glad.c "${ROOT_DIR}/include/glad/glad.h")
 
 configure_file(config.h.in config.h @ONLY)
 
@@ -24,14 +25,14 @@ file(GLOB SHADERS
 
 add_executable("${PROJECT_NAME}"
 	main.cpp
-	ResourceManager.cpp
-	include/ResourceManager.h
-	glad.c
+	ResourceManager.cpp	
+	SpriteRenderer.cpp	
 	stb_image.cpp
 	stb_image_write.cpp
+	include/SpriteRenderer.h	
 	include/DebugColors.h
-	include/CustomTypes.h
-	"${BINARY_DIR}/config.h"
+	include/ResourceManager.h
+	"${BINARY_DIR}/config.h"	
 	"${SHADERS}"
 )
 source_group(TREE ${SRC_DIR} PREFIX "" FILES ${SHADERS})
