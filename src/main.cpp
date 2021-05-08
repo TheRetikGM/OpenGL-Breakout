@@ -1,7 +1,7 @@
 #include <iostream>
 #include <exception>
 #include <string>
-#include "Game.h"
+#include "Game/Game.h"
 #include "ResourceManager.h"
 #include "DebugColors.h"
 #include "config.h"
@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
 	}
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSwapInterval(1);
 
 	// OpenGL configuration
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
