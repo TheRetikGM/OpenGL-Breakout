@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include <glad/glad.h>
+#include <stdexcept>
 
 Shader& Shader::Use()
 {
@@ -114,7 +115,7 @@ void Shader::checkCompileErrors(unsigned int object, std::string type)
 		if (!success)
 		{
 			glGetShaderInfoLog(object, 1024, NULL, infoLog);
-			throw std::exception(("| ERROR::SHADER: Compile-time error: Type: " + type + "\n" + 
+			throw std::runtime_error(("| ERROR::SHADER: Compile-time error: Type: " + type + "\n" + 
 								  infoLog + "\n -- --------------------------------------- --\n").c_str());
 		}
 	}
@@ -124,8 +125,8 @@ void Shader::checkCompileErrors(unsigned int object, std::string type)
 		if (!success)
 		{
 			glGetProgramInfoLog(object, 1024, NULL, infoLog);
-			throw std::exception(("| ERROR::SHADER: Link-time error: Type: " + type + "\n" +
-								  infoLog + "\n -- --------------------------------------- --\n").c_str());
+			throw std::runtime_error(("| ERROR::SHADER: Link-time error: Type: " + type + "\n" +
+								  infoLog + "\n -- --------------------------------------- --\n").c_str());			
 		}
 	}
 }

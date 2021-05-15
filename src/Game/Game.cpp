@@ -46,10 +46,10 @@ void Game::Init()
 	ResourceManager::LoadTexture(TEXTURES_DIR "background.jpg", false, "background");
 	ResourceManager::LoadTexture(TEXTURES_DIR "paddle.png", true, "paddle");
 	// Load levels
-	GameLevel one; one.Load(ASSETS_DIR "/levels/one.lvl", this->Width, this->Height / 2);
-	GameLevel two; two.Load(ASSETS_DIR "/levels/two.lvl", this->Width, this->Height / 2);
-	GameLevel three; three.Load(ASSETS_DIR "/levels/three.lvl", this->Width, this->Height / 2);
-	GameLevel four; four.Load(ASSETS_DIR "/levels/four.lvl", this->Width, this->Height / 2);
+	GameLevel one; one.Load(ASSETS_DIR "levels/one.lvl", this->Width, this->Height / 2);
+	GameLevel two; two.Load(ASSETS_DIR "levels/two.lvl", this->Width, this->Height / 2);
+	GameLevel three; three.Load(ASSETS_DIR "levels/three.lvl", this->Width, this->Height / 2);
+	GameLevel four; four.Load(ASSETS_DIR "levels/four.lvl", this->Width, this->Height / 2);
 	this->Levels.push_back(one);
 	this->Levels.push_back(two);
 	this->Levels.push_back(three);

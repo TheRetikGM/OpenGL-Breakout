@@ -2,7 +2,7 @@ set(ROOT_DIR "${CMAKE_SOURCE_DIR}")
 set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(SRC_INCLUDE "${SRC_DIR}/include")
 set(BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-set(ASSETS_DIR "${ROOT_DIR}/assets")
+set(ASSETS_DIR "${ROOT_DIR}/assets/")
 
 include_directories(
 	"${BINARY_DIR}"
