@@ -42,27 +42,34 @@ int main(int argc, char* argv[])
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// Initialize game
-	Breakout.Init();	
-
-	float deltaTime = 0.0f;
-	float lastFrame = 0.0f;
-
-	while (!glfwWindowShouldClose(window))
+	try 
 	{
-		float currentFrame = (float)glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-		glfwPollEvents();
+		// Initialize game
+		Breakout.Init();	
 
-		Breakout.ProccessInput(deltaTime);
-		Breakout.Update(deltaTime);
+		float deltaTime = 0.0f;
+		float lastFrame = 0.0f;
 
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		Breakout.Render();
+		while (!glfwWindowShouldClose(window))
+		{
+			float currentFrame = (float)glfwGetTime();
+			deltaTime = currentFrame - lastFrame;
+			lastFrame = currentFrame;
+			glfwPollEvents();
 
-		glfwSwapBuffers(window);
+			Breakout.ProccessInput(deltaTime);
+			Breakout.Update(deltaTime);
+
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			Breakout.Render();
+
+			glfwSwapBuffers(window);
+		}
+	}
+	catch (std::exception *e)
+	{
+		std::cerr << "Error: " << e->what() << std::endl;
 	}
 
 	ResourceManager::Clear();

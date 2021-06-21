@@ -4,4 +4,5 @@ add_library(Game
 	GameLevel.cpp ${SRC_INCLUDE}/Game/GameLevel.h
 	BallObject.cpp ${SRC_INCLUDE}/Game/BallObject.h
 	ParticleGen.cpp ${SRC_INCLUDE}/Game/ParticleGen.h
+	PostProcessor.cpp ${SRC_INCLUDE}/Game/PostProcessor.h
 )
