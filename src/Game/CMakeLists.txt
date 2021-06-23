@@ -5,4 +5,5 @@ add_library(Game
 	BallObject.cpp ${SRC_INCLUDE}/Game/BallObject.h
 	ParticleGen.cpp ${SRC_INCLUDE}/Game/ParticleGen.h
 	PostProcessor.cpp ${SRC_INCLUDE}/Game/PostProcessor.h
+	PowerUp.cpp ${SRC_INCLUDE}/Game/PowerUp.h
 )

@@ -12,6 +12,7 @@ public:
 	unsigned int Filter_min, Filter_mag;
 
 	Texture2D();	
+	~Texture2D();
 
 	void Generate(unsigned int width, unsigned int height, unsigned char* data);
 

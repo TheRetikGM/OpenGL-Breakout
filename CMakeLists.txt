@@ -37,5 +37,7 @@ elseif (UNIX)
 		X11
 		GL
 		GLU
+		sfml-audio
+		sfml-system
 	)
 endif()

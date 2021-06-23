@@ -25,6 +25,7 @@ void main()
         for (int i = 0; i < 9; i++)
             color += vec4(sample[i] * edge_kernel[i], 0.0);
         color.a = 1.0;
+        //color = texture(scene, TexCoords);
     }
     else if (confuse) {
         color = vec4(1.0 - texture(scene, TexCoords).rgb, 1.0);

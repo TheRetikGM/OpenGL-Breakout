@@ -13,10 +13,10 @@ void main()
     gl_Position = vec4(vertex.xy, 0.0, 1.0);
     vec2 texture = vertex.zw;
 
-    if (chaos) {
+   if (chaos) {
         float strength = 0.3;
         vec2 pos = vec2(texture.x + sin(time) * strength, texture.y + cos(time) * strength);
-        TexCoords = pos;
+        TexCoords = pos;        
    }
    else if (confuse) {
        TexCoords = vec2(1.0 - texture.x, 1.0 - texture.y);

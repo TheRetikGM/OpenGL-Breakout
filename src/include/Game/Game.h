@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Game/GameLevel.h"
+#include "Game/PowerUp.h"
 
 
 enum GameState {
@@ -23,6 +24,7 @@ public:
     unsigned int    Width, Height;
     unsigned int    Level;
     std::vector<GameLevel> Levels;
+    std::vector<PowerUp> PowerUps;
 
     Game (unsigned int Width, unsigned int Height);
     ~Game();
@@ -36,4 +38,7 @@ public:
 
     void ResetLevel();
     void ResetPlayer();
+
+    void SpawnPowerUps(GameObject &block);
+    void UpdatePowerUps(float dt);
 };

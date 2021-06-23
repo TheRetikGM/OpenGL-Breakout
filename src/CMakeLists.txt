@@ -7,6 +7,7 @@ set(ASSETS_DIR "${ROOT_DIR}/assets/")
 include_directories(
 	"${BINARY_DIR}"
 	"${ROOT_DIR}/include"
+	"${ROOT_DIR}/include/irrKlang"
 	"${SRC_INCLUDE}"
 )
 

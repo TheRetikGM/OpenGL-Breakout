@@ -8,6 +8,10 @@
 #include "Game/PostProcessor.h"
 #include <tuple>
 #include <stdexcept>
+#include <algorithm>
+#include <SFML/Audio.hpp>
+#include <iostream>
+#include "DebugColors.h"
 typedef std::tuple<bool, Direction, glm::vec2> Collision;
 
 SpriteRenderer* Renderer = nullptr;
@@ -24,7 +28,22 @@ ParticleGenerator *Particles;
 PostProcessor *Effects;
 float shake_time = 0.0f;
 
+sf::Music music;
+sf::SoundBuffer sb_bleep1;
+sf::SoundBuffer sb_bleep2;
+sf::SoundBuffer sb_solid;
+sf::SoundBuffer sb_powerup;
+sf::Sound sound_1;
+sf::Sound sound_2;
+
 bool initialized = false;
+
+void ActivatePowerUp(PowerUp &powerup);
+bool ShouldSpawn(unsigned int chance);
+Direction VectorDirection(glm::vec2 target);
+bool CheckCollision(GameObject& a, GameObject& b);
+Collision CheckCollision(BallObject& a, GameObject& b);
+bool isOtherPowerUpActive(std::vector<PowerUp> &powerUps, PowerUpType type);
 
 Game::Game (unsigned int width, unsigned int height) : Width(width), Height(height), State(GAME_ACTIVE) {}
 Game::~Game()
@@ -37,17 +56,21 @@ Game::~Game()
 		delete Particles;
 		delete Effects;
 	}
+	//music.stop();
 }
 void Game::Init()
 {
+	// Load shaders
 	ResourceManager::LoadShader(SHADERS_DIR "SpriteRender.vert", SHADERS_DIR "SpriteRender.frag", nullptr, "sprite");
 	ResourceManager::LoadShader(SHADERS_DIR "particle.vert", SHADERS_DIR "particle.frag", nullptr, "particle");
 	ResourceManager::LoadShader(SHADERS_DIR "effects.vert", SHADERS_DIR "effects.frag", nullptr, "effects");
 
+	// Set basic shader uniforms
 	glm::mat4 projection = glm::ortho(0.0f, (float)this->Width, (float)this->Height, 0.0f, -1.0f, 1.0f);
 	ResourceManager::GetShader("sprite").Use().SetInt("spriteImage", 0);
 	ResourceManager::GetShader("sprite").SetMat4("projection", projection);
 	ResourceManager::GetShader("particle").Use().SetMat4("projection", projection);	
+	//ResourceManager::GetShader("particle").Use().SetMat4("projection", projection);	
 	
 	Renderer = new SpriteRenderer(ResourceManager::GetShader("sprite"));
 	
@@ -58,6 +81,13 @@ void Game::Init()
 	ResourceManager::LoadTexture(TEXTURES_DIR "background.jpg", false, "background");
 	ResourceManager::LoadTexture(TEXTURES_DIR "paddle.png", true, "paddle");
 	ResourceManager::LoadTexture(TEXTURES_DIR "particle.png", true, "particle");
+	ResourceManager::LoadTexture(TEXTURES_DIR "powerup_chaos.png", true, "powerup_chaos");
+	ResourceManager::LoadTexture(TEXTURES_DIR "powerup_confuse.png", true, "powerup_confuse");
+	ResourceManager::LoadTexture(TEXTURES_DIR "powerup_increase.png", true, "powerup_increase");
+	ResourceManager::LoadTexture(TEXTURES_DIR "powerup_passthrough.png", true, "powerup_passthrough");
+	ResourceManager::LoadTexture(TEXTURES_DIR "powerup_speed.png", true, "powerup_speed");
+	ResourceManager::LoadTexture(TEXTURES_DIR "powerup_sticky.png", true, "powerup_sticky");
+	
 	// Load levels
 	GameLevel one; one.Load(ASSETS_DIR "levels/one.lvl", this->Width, this->Height / 2);
 	GameLevel two; two.Load(ASSETS_DIR "levels/two.lvl", this->Width, this->Height / 2);
@@ -81,10 +111,26 @@ void Game::Init()
 		512
 	);
 
-	Effects = new PostProcessor(
-		ResourceManager::GetShader("effects"),
-		this->Width, this->Height);
+	Effects = new PostProcessor(ResourceManager::GetShader("effects"), this->Width, this->Height);	
 	
+	// Load background music
+	if (!music.openFromFile(ASSETS_DIR "audio/breakout.wav"))
+		std::cerr << DC_ERROR " Could not open music " ASSETS_DIR "audio/breakout.wav" << std::endl;
+	else
+	{
+		music.setLoop(true);
+		music.play();
+	}
+	// Load sound effects
+	if (!sb_bleep1.loadFromFile(ASSETS_DIR "audio/bleep1.wav"))
+		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/bleep1.wav" << "\n";
+	if (!sb_bleep2.loadFromFile(ASSETS_DIR "audio/bleep2.wav"))
+		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/bleep2.wav" << "\n";
+	if (!sb_powerup.loadFromFile(ASSETS_DIR "audio/powerup.wav"))
+		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/powerup.wav" << "\n";
+	if (!sb_solid.loadFromFile(ASSETS_DIR "audio/solid.wav"))
+		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/solid.wav" << "\n";
+
 	initialized = true;
 }
 void Game::ProccessInput(float dt)
@@ -133,17 +179,24 @@ void Game::Update(float dt)
 		if (shake_time <= 0.0f)		
 			Effects->shake = false;		
 	}
+
+	UpdatePowerUps(dt);
 }
 void Game::Render()
 {
 	if (this->State == GAME_ACTIVE)
 	{
 		Effects->BeginRender();
+
 		Renderer->DrawSprite(ResourceManager::GetTexture("background"), glm::vec2(0.0f, 0.0f), glm::vec2(this->Width, this->Height));
 		this->Levels[this->Level].Draw(*Renderer);
 		Player->Draw(*Renderer);
-		Particles->Draw();
+		for (PowerUp &powerUp : this->PowerUps)
+			if (!powerUp.Destroyed)
+				powerUp.Draw(*Renderer);
+		Particles->Draw();		
 		Ball->Draw(*Renderer);
+
 		Effects->EndRender();
 		Effects->Render((float)glfwGetTime());
 	}
@@ -164,6 +217,16 @@ void Game::ResetPlayer()
 	Player->Size = PLAYER_SIZE;
 	Player->Position = glm::vec2(this->Width / 2.0f - PLAYER_SIZE.x / 2.0f, this->Height - PLAYER_SIZE.y);
 	Ball->Reset(Player->Position + glm::vec2(PLAYER_SIZE.x / 2.0f - BALL_RADIUS, -(BALL_RADIUS * 2.0f)), INITIAL_BALL_VELOCITY);
+	// Disable powerups
+	for (auto& powerUp : this->PowerUps)
+	{
+		if (powerUp.Activated)
+			powerUp.Duration = 0.0f;
+		else if (!powerUp.Destroyed)
+		{
+			powerUp.Destroyed = true;
+		}
+	}
 }
 // Collisions
 Direction VectorDirection(glm::vec2 target)
@@ -218,31 +281,57 @@ void Game::DoCollisions()
 			if (std::get<0>(collision))
 			{
 				if (!box.IsSolid)
+				{
 					box.Destroyed = true;
+					this->SpawnPowerUps(box);
+					sound_1.setBuffer(sb_bleep1);
+					sound_1.play();
+				}
 				else 
 				{
 					shake_time = 0.05f;
-					Effects->shake = true;	
+					Effects->shake = true;
+					sound_1.setBuffer(sb_solid);
+					sound_1.play();
 				}
 				Direction dir = std::get<1>(collision);
 				glm::vec2 diff_vector = std::get<2>(collision);
-				if (dir == Direction::left || dir == Direction::right)
+				if (!(Ball->PassThrough && !box.IsSolid))
 				{
-					Ball->Velocity.x *= -1;
-					float penetration = Ball->Radius - std::abs(diff_vector.x);
-					if (dir == Direction::left)
-						Ball->Position.x += penetration;
-					else
-						Ball->Position.x -= penetration;
-				}
-				else {
-					Ball->Velocity.y *= -1;
-					float penetration = Ball->Radius - std::abs(diff_vector.y);
-					if (dir == Direction::up)
-						Ball->Position.y -= penetration;
-					else
-						Ball->Position.y += penetration;
-				}
+					if (dir == Direction::left || dir == Direction::right)
+					{
+						Ball->Velocity.x *= -1;
+						float penetration = Ball->Radius - std::abs(diff_vector.x);
+						if (dir == Direction::left)
+							Ball->Position.x += penetration;
+						else
+							Ball->Position.x -= penetration;
+					}
+					else {
+						Ball->Velocity.y *= -1;
+						float penetration = Ball->Radius - std::abs(diff_vector.y);
+						if (dir == Direction::up)
+							Ball->Position.y -= penetration;
+						else
+							Ball->Position.y += penetration;
+					}
+				}				
+			}
+		}
+	}
+	for (auto &powerup : this->PowerUps)
+	{
+		if (!powerup.Destroyed) 
+		{
+			if (powerup.Position.y >= this->Height)
+				powerup.Destroyed = true;
+			if (CheckCollision(*Player, powerup)) {
+				ActivatePowerUp(powerup);
+				powerup.Destroyed = true;
+				powerup.Activated = true;
+
+				sound_2.setBuffer(sb_powerup);
+				sound_2.play();
 			}
 		}
 	}
@@ -257,5 +346,135 @@ void Game::DoCollisions()
 		Ball->Velocity.x = INITIAL_BALL_VELOCITY.x * percentage * strength;
 		Ball->Velocity.y = -1 * std::abs(Ball->Velocity.y);
 		Ball->Velocity = glm::normalize(Ball->Velocity) * glm::length(oldVelocity);
+		Ball->Stuck = Ball->Sticky;
+
+		sound_1.setBuffer(sb_bleep2);
+		sound_1.play();
 	}
+}
+bool ShouldSpawn(unsigned int chance)
+{
+	unsigned int random = rand() & chance;
+	return random == 0;
+}
+void Game::SpawnPowerUps(GameObject &block)
+{
+	if (ShouldSpawn(75)) // 1 in a 75 chance
+		this->PowerUps.push_back(
+			PowerUp(PowerUpType::speed, glm::vec3(0.5f, 0.5f, 1.0f), 0.0f, block.Position, 
+			ResourceManager::GetTexture("powerup_speed")));
+	if (ShouldSpawn(75)) // 1 in a 75 chance
+		this->PowerUps.push_back(
+			PowerUp(PowerUpType::sticky, glm::vec3(1.0f, 0.5f, 1.0f), 20.0f, block.Position, 
+			ResourceManager::GetTexture("powerup_sticky")));
+	if (ShouldSpawn(75)) // 1 in a 75 chance
+		this->PowerUps.push_back(
+			PowerUp(PowerUpType::passthrough, glm::vec3(0.5f, 1.0f, 0.5f), 10.0f, block.Position, 
+			ResourceManager::GetTexture("powerup_passthrough")));
+	if (ShouldSpawn(75)) // 1 in a 75 chance
+		this->PowerUps.push_back(
+			PowerUp(PowerUpType::increase, glm::vec3(1.0f, 0.6f, 0.4f), 0.0f, block.Position, 
+			ResourceManager::GetTexture("powerup_increase")));
+	if (ShouldSpawn(15)) // 1 in a 15 chance
+		this->PowerUps.push_back(
+			PowerUp(PowerUpType::confuse, glm::vec3(1.0f, 0.3f, 0.3f), 15.0f, block.Position, 
+			ResourceManager::GetTexture("powerup_confuse")));
+	if (ShouldSpawn(15)) // 1 in a 15 chance
+		this->PowerUps.push_back(
+			PowerUp(PowerUpType::chaos, glm::vec3(0.9f, 0.25f, 0.25f), 15.0f, block.Position, 
+			ResourceManager::GetTexture("powerup_chaos")));
+}
+void ActivatePowerUp(PowerUp &powerup)
+{
+	if (powerup.Type == PowerUpType::speed)
+	{
+		Ball->Velocity *= 1.2;	// increase ball speed by 20%
+	}
+	else if (powerup.Type == PowerUpType::sticky)
+	{
+		Ball->Sticky = true;
+		Player->Color = glm::vec3(1.0f, 0.5f, 1.0f);
+	}
+	else if (powerup.Type == PowerUpType::passthrough)
+	{
+		Ball->PassThrough = true;
+		Ball->Color = glm::vec3(1.0f, 0.5f, 0.5f);
+	}
+	else if (powerup.Type == PowerUpType::increase)
+	{
+		Player->Size.x += 50;	// increase paddle size by 50 pixels
+	}
+	else if (powerup.Type == PowerUpType::confuse)
+	{
+		if (!Effects->chaos)
+			Effects->confuse = true;
+	}
+	else if (powerup.Type == PowerUpType::chaos)
+	{
+		if (!Effects->confuse)
+			Effects->chaos = true;
+	}
+}
+void Game::UpdatePowerUps(float dt)
+{
+	for (auto &powerUp : this->PowerUps)
+	{
+		powerUp.Position += powerUp.Velocity * dt;
+		if (powerUp.Activated)
+		{
+			powerUp.Duration -= dt;
+
+			if (powerUp.Duration <= 0.0f)
+			{
+				powerUp.Activated = false;
+				
+				if (powerUp.Type == PowerUpType::sticky)
+				{
+					if (!isOtherPowerUpActive(this->PowerUps, PowerUpType::sticky))
+					{
+						Ball->Sticky = false;
+						Player->Color = glm::vec3(1.0f);
+					}
+				}
+				else if (powerUp.Type == PowerUpType::passthrough)
+				{
+					if (!isOtherPowerUpActive(this->PowerUps, PowerUpType::passthrough))
+					{
+						Ball->PassThrough = false;
+						Ball->Color = glm::vec3(1.0f);
+					}
+				}
+				else if (powerUp.Type == PowerUpType::confuse)
+				{
+					if (!isOtherPowerUpActive(this->PowerUps, PowerUpType::confuse))
+					{
+						Effects->confuse = false;
+					}
+				}
+				else if (powerUp.Type == PowerUpType::chaos)
+				{
+					if (!isOtherPowerUpActive(this->PowerUps, PowerUpType::chaos))
+					{
+						Effects->chaos = false;
+					}
+				}
+			}
+		}
+	}
+
+	this->PowerUps.erase(std::remove_if(this->PowerUps.begin(), this->PowerUps.end(), [](const PowerUp &powerUp)
+	{
+		return powerUp.Destroyed && !powerUp.Activated;
+	}), this->PowerUps.end());
+}
+
+bool isOtherPowerUpActive(std::vector<PowerUp> &powerUps, PowerUpType type)
+{
+	for (const PowerUp &powerUp : powerUps)
+	{
+		if (powerUp.Activated)
+			if (powerUp.Type == type)
+				return true;
+	}
+	return false;
 }

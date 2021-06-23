@@ -7,7 +7,7 @@
 #cmakedefine BINARY_DIR "@BINARY_DIR@"
 #cmakedefine ASSETS_DIR "@ASSETS_DIR@"
 #define SHADERS_DIR SRC_DIR "/shaders/"
-#define TEXTURES_DIR ASSETS_DIR "/textures/"
+#define TEXTURES_DIR ASSETS_DIR "textures/"
 #else
 #define ROOT_DIR ".."
 #define SRC_DIR "../src"

@@ -2,14 +2,25 @@
 #include <exception>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include <stb_image.h>
+#include <stdexcept>
 #include "config.h"
+#include "DebugColors.h"
 
 std::map<std::string, Shader> ResourceManager::Shaders;
 std::map<std::string, Texture2D> ResourceManager::Textures;
 Shader ResourceManager::LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name)
 {
-	Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
+	try
+	{
+		Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << DC_ERROR " ResourceManager::LoadShader(): " << e.what() << '\n';
+	}
+		
 	return Shaders[name];
 }
 Shader ResourceManager::GetShader(std::string name)
@@ -18,7 +29,14 @@ Shader ResourceManager::GetShader(std::string name)
 }
 Texture2D ResourceManager::LoadTexture(const char* file, bool alpha, std::string name)
 {
-	Textures[name] = loadTextureFromFile(file, alpha);
+	try
+	{
+		Textures[name] = loadTextureFromFile(file, alpha);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << DC_ERROR " ResourceManager::LoadTexture(): "<< e.what() << '\n';
+	}	
 	return Textures[name];
 }
 Texture2D ResourceManager::GetTexture(std::string name)
@@ -63,7 +81,7 @@ Shader ResourceManager::loadShaderFromFile(const char* vShaderFile, const char* 
 	}
 	catch (std::exception& e)
 	{
-		throw std::runtime_error(("ERROR::LoadShader: Failed to read shader files\n" + std::string(e.what())).c_str());
+		throw std::runtime_error(("Failed to read shader files\n" + std::string(e.what())).c_str());
 	}
 
 	const char* vShaderCode = vertexCode.c_str();
@@ -84,6 +102,9 @@ Texture2D ResourceManager::loadTextureFromFile(const char* file, bool alpha)
 	}
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load(file, &width, &height, &nrChannels, 0);
+
+	if (!data)
+		throw std::runtime_error(("Could not load texture '" + std::string(file) + "'.").c_str());
 	texture.Generate(width, height, data);
 	stbi_image_free(data);
 	return texture;
