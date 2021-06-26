@@ -7,6 +7,15 @@
 #include "config.h"
 #include <GLFW/glfw3.h>
 
+/* Needed to compile with static SFML-audio library. Otherwise there will be linking problems with flac.lib etc. */
+#if WIN32
+FILE _iob[] = { *stdin, *stdout, *stderr };
+extern "C" FILE * __cdecl __iob_func(void)
+{
+	return _iob;
+}
+#endif
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -66,6 +75,8 @@ int main(int argc, char* argv[])
 
 			glfwSwapBuffers(window);
 		}
+
+		Breakout.Destroy();
 	}
 	catch (std::exception *e)
 	{

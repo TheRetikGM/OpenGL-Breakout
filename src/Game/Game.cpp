@@ -28,13 +28,13 @@ ParticleGenerator *Particles;
 PostProcessor *Effects;
 float shake_time = 0.0f;
 
-sf::Music music;
-sf::SoundBuffer sb_bleep1;
-sf::SoundBuffer sb_bleep2;
-sf::SoundBuffer sb_solid;
-sf::SoundBuffer sb_powerup;
-sf::Sound sound_1;
-sf::Sound sound_2;
+sf::Music *music = nullptr;
+sf::SoundBuffer *sb_bleep1 = nullptr;
+sf::SoundBuffer *sb_bleep2 = nullptr;
+sf::SoundBuffer *sb_solid = nullptr;
+sf::SoundBuffer *sb_powerup = nullptr;
+sf::Sound *sound_1 = nullptr;
+sf::Sound *sound_2 = nullptr;
 
 bool initialized = false;
 
@@ -46,7 +46,8 @@ Collision CheckCollision(BallObject& a, GameObject& b);
 bool isOtherPowerUpActive(std::vector<PowerUp> &powerUps, PowerUpType type);
 
 Game::Game (unsigned int width, unsigned int height) : Width(width), Height(height), State(GAME_ACTIVE) {}
-Game::~Game()
+Game::~Game(){}
+void Game::Destroy()
 {
 	if (initialized)
 	{
@@ -55,8 +56,15 @@ Game::~Game()
 		delete Ball;
 		delete Particles;
 		delete Effects;
+
+		delete music;
+		delete sb_bleep1;
+		delete sb_bleep2;
+		delete sb_solid;
+		delete sb_powerup;
+		delete sound_1;
+		delete sound_2;
 	}
-	//music.stop();
 }
 void Game::Init()
 {
@@ -113,22 +121,30 @@ void Game::Init()
 
 	Effects = new PostProcessor(ResourceManager::GetShader("effects"), this->Width, this->Height);	
 	
+	// init SFML music and audio objects
+	music = new sf::Music();
+	sb_bleep1 = new sf::SoundBuffer();
+	sb_bleep2 = new sf::SoundBuffer();
+	sb_solid = new sf::SoundBuffer();
+	sb_powerup = new sf::SoundBuffer();
+	sound_1 = new sf::Sound();
+	sound_2 = new sf::Sound();
 	// Load background music
-	if (!music.openFromFile(ASSETS_DIR "audio/breakout.wav"))
+	if (!music->openFromFile(ASSETS_DIR "audio/breakout.wav"))
 		std::cerr << DC_ERROR " Could not open music " ASSETS_DIR "audio/breakout.wav" << std::endl;
 	else
 	{
-		music.setLoop(true);
-		music.play();
+		music->setLoop(true);
+		music->play();
 	}
 	// Load sound effects
-	if (!sb_bleep1.loadFromFile(ASSETS_DIR "audio/bleep1.wav"))
+	if (!sb_bleep1->loadFromFile(ASSETS_DIR "audio/bleep1.wav"))
 		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/bleep1.wav" << "\n";
-	if (!sb_bleep2.loadFromFile(ASSETS_DIR "audio/bleep2.wav"))
+	if (!sb_bleep2->loadFromFile(ASSETS_DIR "audio/bleep2.wav"))
 		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/bleep2.wav" << "\n";
-	if (!sb_powerup.loadFromFile(ASSETS_DIR "audio/powerup.wav"))
+	if (!sb_powerup->loadFromFile(ASSETS_DIR "audio/powerup.wav"))
 		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/powerup.wav" << "\n";
-	if (!sb_solid.loadFromFile(ASSETS_DIR "audio/solid.wav"))
+	if (!sb_solid->loadFromFile(ASSETS_DIR "audio/solid.wav"))
 		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/solid.wav" << "\n";
 
 	initialized = true;
@@ -284,15 +300,15 @@ void Game::DoCollisions()
 				{
 					box.Destroyed = true;
 					this->SpawnPowerUps(box);
-					sound_1.setBuffer(sb_bleep1);
-					sound_1.play();
+					sound_1->setBuffer(*sb_bleep1);
+					sound_1->play();
 				}
 				else 
 				{
 					shake_time = 0.05f;
 					Effects->shake = true;
-					sound_1.setBuffer(sb_solid);
-					sound_1.play();
+					sound_1->setBuffer(*sb_solid);
+					sound_1->play();
 				}
 				Direction dir = std::get<1>(collision);
 				glm::vec2 diff_vector = std::get<2>(collision);
@@ -330,8 +346,8 @@ void Game::DoCollisions()
 				powerup.Destroyed = true;
 				powerup.Activated = true;
 
-				sound_2.setBuffer(sb_powerup);
-				sound_2.play();
+				sound_2->setBuffer(*sb_powerup);
+				sound_2->play();
 			}
 		}
 	}
@@ -348,8 +364,8 @@ void Game::DoCollisions()
 		Ball->Velocity = glm::normalize(Ball->Velocity) * glm::length(oldVelocity);
 		Ball->Stuck = Ball->Sticky;
 
-		sound_1.setBuffer(sb_bleep2);
-		sound_1.play();
+		sound_1->setBuffer(*sb_bleep2);
+		sound_1->play();
 	}
 }
 bool ShouldSpawn(unsigned int chance)

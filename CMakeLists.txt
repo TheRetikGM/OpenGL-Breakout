@@ -23,6 +23,8 @@ if (MSVC)
 		opengl32
 		${glfw3Lib}
 		${FreeTypeLib}
+		winmm.lib
+		legacy_stdio_definitions.lib
 	)
 	install(TARGETS "${PROJECT_NAME}" DESTINATION bin)
 	include(CPack)

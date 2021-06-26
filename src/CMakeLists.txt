@@ -38,5 +38,13 @@ add_executable("${PROJECT_NAME}"
 )
 source_group(TREE ${SRC_DIR} PREFIX "" FILES ${SHADERS})
 
+if (MSVC)
+	add_custom_command(TARGET "${PROJECT_NAME}" POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy
+		"${CMAKE_SOURCE_DIR}/lib/openal32.dll"
+		$<TARGET_FILE_DIR:${PROJECT_NAME}>
+	)
+endif()
+
 install(DIRECTORY "${REPO_ROOT}/assets" DESTINATION ./)
 install(DIRECTORY "${SRC_DIR}/shaders" DESTINATION src)

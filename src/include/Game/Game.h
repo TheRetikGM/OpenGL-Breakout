@@ -30,6 +30,7 @@ public:
     ~Game();
 
     void Init();
+    void Destroy();
 
     void ProccessInput(float dt);
     void Update(float dt);
