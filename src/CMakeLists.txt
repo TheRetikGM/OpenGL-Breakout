@@ -7,7 +7,6 @@ set(ASSETS_DIR "${ROOT_DIR}/assets/")
 include_directories(
 	"${BINARY_DIR}"
 	"${ROOT_DIR}/include"
-	"${ROOT_DIR}/include/irrKlang"
 	"${SRC_INCLUDE}"
 )
 
@@ -27,17 +26,20 @@ file(GLOB SHADERS
 add_executable("${PROJECT_NAME}"
 	main.cpp
 	ResourceManager.cpp	
-	SpriteRenderer.cpp	
+	SpriteRenderer.cpp
+	TextRenderer.cpp	
 	stb_image.cpp
 	stb_image_write.cpp
 	include/SpriteRenderer.h	
 	include/DebugColors.h
 	include/ResourceManager.h
+	include/TextRenderer.h
 	"${BINARY_DIR}/config.h"	
 	"${SHADERS}"
 )
 source_group(TREE ${SRC_DIR} PREFIX "" FILES ${SHADERS})
 
+# Copy openal32.dll to the executable directory
 if (MSVC)
 	add_custom_command(TARGET "${PROJECT_NAME}" POST_BUILD
 		COMMAND ${CMAKE_COMMAND} -E copy

@@ -8,7 +8,7 @@ add_subdirectory("src")
 target_link_libraries(${PROJECT_NAME}
 	Game
 	Shader
-	Texture
+	Texture	
 	GLAD
 )
 
@@ -18,11 +18,11 @@ target_link_directories("${PROJECT_NAME}"
 
 if (MSVC)
 	set (glfw3Lib debug Debug/glfw3d optimized Release/glfw3)
-	set (FreeTypeLib debug Debug/freetyped optimized Release/freetype)
+	set (freeTypeLib debug Debug/freetyped optimized/freetype)
 	target_link_libraries("${PROJECT_NAME}"
 		opengl32
 		${glfw3Lib}
-		${FreeTypeLib}
+		${freeTypeLib}
 		winmm.lib
 		legacy_stdio_definitions.lib
 	)
@@ -41,5 +41,6 @@ elseif (UNIX)
 		GLU
 		sfml-audio
 		sfml-system
+		freetype
 	)
 endif()

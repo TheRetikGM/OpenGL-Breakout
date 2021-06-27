@@ -21,10 +21,12 @@ class Game
 public:
     GameState       State;
     bool            Keys[1024];
+    bool            KeysProcessed[1024];
     unsigned int    Width, Height;
     unsigned int    Level;
     std::vector<GameLevel> Levels;
     std::vector<PowerUp> PowerUps;
+    unsigned int Lives;
 
     Game (unsigned int Width, unsigned int Height);
     ~Game();

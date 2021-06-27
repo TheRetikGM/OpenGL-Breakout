@@ -12,10 +12,13 @@
 #include <SFML/Audio.hpp>
 #include <iostream>
 #include "DebugColors.h"
+#include "TextRenderer.h"
+#include <sstream>
 typedef std::tuple<bool, Direction, glm::vec2> Collision;
 
 SpriteRenderer* Renderer = nullptr;
 
+unsigned int max_levels = 4;
 const glm::vec2 PLAYER_SIZE(100.0f, 20.0f);
 const float PLAYER_VELOCITY(500.0f);	// 500px / 1s
 GameObject* Player = nullptr;
@@ -36,6 +39,8 @@ sf::SoundBuffer *sb_powerup = nullptr;
 sf::Sound *sound_1 = nullptr;
 sf::Sound *sound_2 = nullptr;
 
+TextRenderer *Text = nullptr;
+
 bool initialized = false;
 
 void ActivatePowerUp(PowerUp &powerup);
@@ -45,7 +50,7 @@ bool CheckCollision(GameObject& a, GameObject& b);
 Collision CheckCollision(BallObject& a, GameObject& b);
 bool isOtherPowerUpActive(std::vector<PowerUp> &powerUps, PowerUpType type);
 
-Game::Game (unsigned int width, unsigned int height) : Width(width), Height(height), State(GAME_ACTIVE) {}
+Game::Game (unsigned int width, unsigned int height) : Width(width), Height(height), State(GAME_MENU), Lives(3) {}
 Game::~Game(){}
 void Game::Destroy()
 {
@@ -64,6 +69,8 @@ void Game::Destroy()
 		delete sb_powerup;
 		delete sound_1;
 		delete sound_2;
+
+		delete Text;
 	}
 }
 void Game::Init()
@@ -101,10 +108,12 @@ void Game::Init()
 	GameLevel two; two.Load(ASSETS_DIR "levels/two.lvl", this->Width, this->Height / 2);
 	GameLevel three; three.Load(ASSETS_DIR "levels/three.lvl", this->Width, this->Height / 2);
 	GameLevel four; four.Load(ASSETS_DIR "levels/four.lvl", this->Width, this->Height / 2);
+	GameLevel test; test.Load(ASSETS_DIR "levels/test.lvl", this->Width, this->Height / 2);
 	this->Levels.push_back(one);
 	this->Levels.push_back(two);
 	this->Levels.push_back(three);
 	this->Levels.push_back(four);
+	this->Levels.push_back(test);
 	this->Level = 0;
 
 	glm::vec2 playerPos = glm::vec2((this->Width - PLAYER_SIZE.x) / 2.0f, this->Height - PLAYER_SIZE.y);
@@ -134,7 +143,7 @@ void Game::Init()
 		std::cerr << DC_ERROR " Could not open music " ASSETS_DIR "audio/breakout.wav" << std::endl;
 	else
 	{
-		music->setLoop(true);
+		music->setLoop(true);		
 		music->play();
 	}
 	// Load sound effects
@@ -146,6 +155,10 @@ void Game::Init()
 		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/powerup.wav" << "\n";
 	if (!sb_solid->loadFromFile(ASSETS_DIR "audio/solid.wav"))
 		std::cerr << DC_ERROR " Could not open sound file " ASSETS_DIR "audio/solid.wav" << "\n";
+
+	// Initialize TextRenderer
+	Text = new TextRenderer(this->Width, this->Height);
+	Text->Load(ASSETS_DIR "fonts/ocraext.ttf", 24);
 
 	initialized = true;
 }
@@ -175,6 +188,36 @@ void Game::ProccessInput(float dt)
 		if (this->Keys[GLFW_KEY_SPACE])
 			Ball->Stuck = false;
 	}
+	else if (this->State == GAME_MENU)
+	{
+		if (this->Keys[GLFW_KEY_ENTER] && !this->KeysProcessed[GLFW_KEY_ENTER])
+		{
+			this->State = GAME_ACTIVE;
+			this->KeysProcessed[GLFW_KEY_ENTER] = true;
+		}
+		if (this->Keys[GLFW_KEY_W] && !this->KeysProcessed[GLFW_KEY_W])
+		{
+			this->Level = (this->Level + 1) % (max_levels + 1);
+			this->KeysProcessed[GLFW_KEY_W] = true;
+		}
+		if (this->Keys[GLFW_KEY_S] && !this->KeysProcessed[GLFW_KEY_S])
+		{
+			if (this->Level > 0)
+				--this->Level;
+			else
+				this->Level = max_levels;
+			this->KeysProcessed[GLFW_KEY_S] = true;
+		}
+	}
+	else if (this->State == GAME_WIN)
+	{
+		if (this->Keys[GLFW_KEY_ENTER] && !this->KeysProcessed[GLFW_KEY_ENTER])
+		{
+			this->State = GAME_MENU;
+			this->KeysProcessed[GLFW_KEY_ENTER] = true;
+			Effects->chaos = false;
+		}
+	}
 }
 void Game::Update(float dt)
 {
@@ -183,7 +226,12 @@ void Game::Update(float dt)
 
 	if (Ball->Position.y >= this->Height)
 	{
-		this->ResetLevel();
+		--this->Lives;
+		if (this->Lives == 0)
+		{
+			this->ResetLevel();
+			this->State = GAME_MENU;
+		}
 		this->ResetPlayer();
 	}
 
@@ -197,10 +245,18 @@ void Game::Update(float dt)
 	}
 
 	UpdatePowerUps(dt);
+
+	if (this->State == GAME_ACTIVE && this->Levels[this->Level].IsCompleted())
+	{
+		this->ResetLevel();
+		this->ResetPlayer();
+		Effects->chaos = true;
+		this->State = GAME_WIN;
+	}
 }
 void Game::Render()
 {
-	if (this->State == GAME_ACTIVE)
+	if (this->State == GAME_ACTIVE || this->State == GAME_MENU || this->State == GAME_WIN)
 	{
 		Effects->BeginRender();
 
@@ -215,6 +271,19 @@ void Game::Render()
 
 		Effects->EndRender();
 		Effects->Render((float)glfwGetTime());
+
+		std::stringstream ss; ss << this->Lives;
+		Text->RenderText("Lives: " + ss.str(), 5.0f, 5.0f, 1.0f);
+	}
+	if (this->State == GAME_MENU)
+	{
+		Text->RenderText("Press ENTER to start", 250.0f, Height / 2, 1.0f);
+        Text->RenderText("Press W or S to select level", 245.0f, Height / 2 + 20.0f, 0.75f);
+	}
+	if (this->State == GAME_WIN)
+	{
+		Text->RenderText("You WON!!!", 320.0f, Height / 2 - 20.0f, 1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		Text->RenderText("Press ENTER to retry or ESC to quit", 130.0f, Height / 2.0f, 1.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 	}
 }
 void Game::ResetLevel()
@@ -227,6 +296,10 @@ void Game::ResetLevel()
 		this->Levels[2].Load(ASSETS_DIR "/levels/three.lvl", this->Width, this->Height / 2.0f);
 	else if (this->Level == 3)
 		this->Levels[3].Load(ASSETS_DIR "/levels/four.lvl", this->Width, this->Height / 2.0f);
+	else if (this->Level == 4)
+		this->Levels[4].Load(ASSETS_DIR "/levels/test.lvl", this->Width, this->Height / 2.0f);
+
+	this->Lives = 3;
 }
 void Game::ResetPlayer()
 {
