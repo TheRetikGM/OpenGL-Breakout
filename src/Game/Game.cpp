@@ -316,6 +316,7 @@ void Game::ResetPlayer()
 			powerUp.Destroyed = true;
 		}
 	}
+	music->setPitch(1);
 }
 // Collisions
 Direction VectorDirection(glm::vec2 target)
@@ -478,6 +479,7 @@ void ActivatePowerUp(PowerUp &powerup)
 	if (powerup.Type == PowerUpType::speed)
 	{
 		Ball->Velocity *= 1.2;	// increase ball speed by 20%
+		music->setPitch(music->getPitch() * 1.2f);
 	}
 	else if (powerup.Type == PowerUpType::sticky)
 	{

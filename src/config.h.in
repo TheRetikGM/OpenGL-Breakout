@@ -1,17 +1,25 @@
 #pragma once
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
+
+// Uncomment this line if building PACKAGE
+//#define _INSTALL
+
 #ifndef _INSTALL
 #cmakedefine ROOT_DIR "@PROJECT_DIR@"
 #cmakedefine SRC_DIR "@SRC_DIR@"
 #cmakedefine BINARY_DIR "@BINARY_DIR@"
 #cmakedefine ASSETS_DIR "@ASSETS_DIR@"
+#else
+
+#define ROOT_DIR ".."
+#define ASSETS_DIR "../assets/"
+#define SRC_DIR ".."
+
+#endif
+
+#include <glad/glad.h>
 #define SHADERS_DIR SRC_DIR "/shaders/"
 #define TEXTURES_DIR ASSETS_DIR "textures/"
-#else
-#define ROOT_DIR ".."
-#define SRC_DIR "../src"
-#define BINARY_DIR "."
-#endif
-#include <glad/glad.h>
+
 #endif

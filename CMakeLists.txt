@@ -16,9 +16,14 @@ target_link_directories("${PROJECT_NAME}"
 	PRIVATE "${CMAKE_SOURCE_DIR}/lib"
 )
 
+install(TARGETS "${PROJECT_NAME}" DESTINATION bin)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/assets" DESTINATION ./)
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/src/shaders" DESTINATION ./)
+install(FILES "${CMAKE_SOURCE_DIR}/lib/openal32.dll" DESTINATION bin)
+
 if (MSVC)
 	set (glfw3Lib debug Debug/glfw3d optimized Release/glfw3)
-	set (freeTypeLib debug Debug/freetyped optimized/freetype)
+	set (freeTypeLib debug Debug/freetyped Release/freetype)
 	target_link_libraries("${PROJECT_NAME}"
 		opengl32
 		${glfw3Lib}
@@ -26,7 +31,6 @@ if (MSVC)
 		winmm.lib
 		legacy_stdio_definitions.lib
 	)
-	install(TARGETS "${PROJECT_NAME}" DESTINATION bin)
 	include(CPack)
 elseif (UNIX)
 	target_link_libraries("${PROJECT_NAME}"

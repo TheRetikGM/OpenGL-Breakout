@@ -47,6 +47,3 @@ if (MSVC)
 		$<TARGET_FILE_DIR:${PROJECT_NAME}>
 	)
 endif()
-
-install(DIRECTORY "${REPO_ROOT}/assets" DESTINATION ./)
-install(DIRECTORY "${SRC_DIR}/shaders" DESTINATION src)
